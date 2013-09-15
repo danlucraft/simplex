@@ -2,7 +2,7 @@
 simplex
 =======
 
-A naive pure-Ruby implementation of the Simplex algorithm for solving linear programming problems.
+A naive pure-Ruby implementation of the Simplex algorithm for solving linear programming problems. Solves maximizations in standard form.
 
 ## Why?
 
@@ -14,10 +14,25 @@ and anyway they are hard to install on Heroku.
      and when you can accept not that great performance. 
  * *Don't use it for*: large LP problems, when you have access to native solvers, when you need very fast solving time.
 
-It's written for legibility over efficiency, so you may find the code useful as an example of
-how to write a Simplex solver.
-
 ## Usage
 
-## Performance
+To solve the linear programming problem:
+
+  max x +  y
+
+     2x +  y <= 4
+      x + 2y <= 3
+
+      x, y >= 0
+
+Like this:
+
+    result = Simplex.new(
+      [1, 1],       # coefficients of objective function
+      [             # matrix of inequality coefficients on the lhs ...
+        [ 2,  1],
+        [ 1,  2],
+      ],
+      [4, 3]        # .. and the rhs of the inequalities
+    ).solution
 
