@@ -35,4 +35,5 @@ Like this:
       ],
       [4, 3]        # .. and the rhs of the inequalities
     ).solution
+    # => [(5/3), (2/3)]
 
