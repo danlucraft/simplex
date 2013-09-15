@@ -18,12 +18,12 @@ and anyway they are hard to install on Heroku.
 
 To solve the linear programming problem:
 
-  max x +  y
+    max x +  y
 
-     2x +  y <= 4
-      x + 2y <= 3
+      2x +  y <= 4
+       x + 2y <= 3
 
-      x, y >= 0
+       x, y >= 0
 
 Like this:
 
