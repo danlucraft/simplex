@@ -103,7 +103,7 @@ class Simplex
     current_min_index = nil
     @c.each_with_index do |v, i| 
       if v < 0
-        if current_min_value == nil || v <= current_min_value
+        if current_min_value == nil || v < current_min_value
           current_min_value = v
           current_min_index = i
         end
@@ -126,7 +126,7 @@ class Simplex
     0.upto(@a.row_count - 1) do |row_ix|
       next if @a[row_ix, column_ix] == 0
       ratio = Rational(@b[row_ix], @a[row_ix, column_ix])
-      if ratio > 0 && (!current_min_value || ratio < current_min_value)
+      if ratio > 0 && (!current_min_value || ratio <= current_min_value)
         current_min_value = ratio
         current_min_index = row_ix
       end

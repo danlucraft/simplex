@@ -105,4 +105,18 @@ class SimplexTest < MiniTest::Unit::TestCase
     assert_equal [4, 10, 14], result
   end
 
+  def test_4x4
+    result = Simplex.new(
+      [1, 2, 1, 2],
+      [
+        [1, 0, 1, 0],
+        [0, 1, 0, 1],
+        [1, 1, 0, 0],
+        [0, 0, 1, 1]
+      ],
+      [1, 4, 2, 2]
+    ).solution
+    assert_equal [0, 2, 0, 2], result
+  end
+
 end
