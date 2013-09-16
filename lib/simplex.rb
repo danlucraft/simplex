@@ -11,7 +11,8 @@ class Vector
 end
 
 class Simplex
-  DEFAULT_MAX_ITERATIONS = 1_000_000
+  DEFAULT_MAX_ITERATIONS = 10_000
+
   attr_accessor :max_iterations
 
   def initialize(c, a, b)
@@ -38,8 +39,10 @@ class Simplex
   def solve
     return if @solved
     i = 0
-    while can_improve? and i < @max_iterations
+    while can_improve?
       i += 1
+      raise "Too many iterations" if i > max_iterations 
+
       pivot_column = entering_variable_ix
       pivot_row    = minimum_coefficient_ratio_row_ix(pivot_column)
       leaving_var = leaving_variable(pivot_row)
@@ -125,8 +128,11 @@ class Simplex
     current_min_index = nil
     0.upto(@a.row_count - 1) do |row_ix|
       next if @a[row_ix, column_ix] == 0
-      ratio = Rational(@b[row_ix], @a[row_ix, column_ix])
-      if ratio > 0 && (!current_min_value || ratio <= current_min_value)
+      b_val = @b[row_ix]
+      a_val = @a[row_ix, column_ix]
+      ratio = Rational(b_val, a_val)
+      is_negative = (@b[row_ix] < 0 || @a[row_ix, column_ix] < 0) && !(@b[row_ix] < 0 && @a[row_ix, column_ix] < 0)
+      if !is_negative && (!current_min_value || ratio <= current_min_value)
         current_min_value = ratio
         current_min_index = row_ix
       end
@@ -135,3 +141,6 @@ class Simplex
   end
 
 end
+
+
+
