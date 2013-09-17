@@ -139,8 +139,5 @@ class Simplex
     end
     return current_min_index
   end
-
 end
-
-
 
