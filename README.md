@@ -2,6 +2,8 @@
 simplex
 =======
 
+[![Build Status](https://travis-ci.org/danlucraft/simplex.png)](https://travis-ci.org/danlucraft/simplex)
+
 A naive pure-Ruby implementation of the Simplex algorithm for solving linear programming problems. Solves maximizations in standard form.
 
 ### Why?
