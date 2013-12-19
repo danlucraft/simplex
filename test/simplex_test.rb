@@ -91,7 +91,7 @@ class SimplexTest < Test::Unit::TestCase
     assert_equal [600, 5_100, 800], result
   end
 
-  def test_3x3_e
+  def test_3x4
     result = Simplex.new(
       [100_000, 40_000, 18_000],
       [
@@ -117,6 +117,18 @@ class SimplexTest < Test::Unit::TestCase
       [1, 4, 2, 2]
     ).solution
     assert_equal [0, 2, 0, 2], result
+  end
+
+  def test_cycle
+    result = Simplex.new(
+      [10, -57, -9, -24],
+      [
+        [0.5, -5.5, -2.5, 9],
+        [0.5, -1.5, -0.5, 1],
+        [  1,    0,    0, 0]
+      ],
+      [0, 0, 1]
+    ).solution
   end
 
 end

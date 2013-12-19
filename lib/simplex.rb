@@ -62,6 +62,9 @@ class Simplex
       leaving_var = leaving_variable(pivot_row)
       @basic_vars.delete(leaving_var)
 
+      #puts
+      #puts formatted_tableau(pivot_column, pivot_row)
+
       # update objective
       c_ratio = Rational(@c[pivot_column], @a[pivot_row, pivot_column])
       @c = @c - (@a.row(pivot_row)*c_ratio)
@@ -87,6 +90,9 @@ class Simplex
       @basic_vars.sort!
       update_solution
     end
+
+    #puts
+    #puts formatted_tableau
     @solved = true
   end
 
@@ -135,6 +141,27 @@ class Simplex
         return column_ix
       end
     end
+  end
+
+  def formatted_tableau(pivot_column=nil, pivot_row=nil)
+    num_cols = @c.size + 1
+    c = @c.to_a.map {|c| "%2.3f" % c }
+    b = @b.to_a.map {|b| "%2.3f" % b }
+    a = @a.to_a.map {|ar| ar.map {|a| "%2.3f" % a}}
+    if pivot_row
+      a[pivot_row][pivot_column] = "*" + a[pivot_row][pivot_column]
+    end
+    max = (c + b + a + ["1234567"]).flatten.map(&:length).max
+    result = []
+    result << c.map {|c| c.rjust(max, " ") }
+    a.zip(b) do |arow, brow|
+      result << (arow + [brow]).map {|a| a.rjust(max, " ") }
+      result.last.insert(arow.length, "|")
+    end
+    lines = result.map {|b| b.join("  ") }
+    max_line_length = lines.map(&:length).max
+    lines.insert(1, "-"*max_line_length)
+    lines.join("\n")
   end
 
   def minimum_coefficient_ratio_row_ix(column_ix)
