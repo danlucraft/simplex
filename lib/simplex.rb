@@ -1,8 +1,22 @@
 require 'matrix'
 
 class Matrix
-  def []=(i, j, x)
-    @rows[i][j] = x
+  unless method_defined?(:[]=)
+    def []=(i, j, x)
+      @rows[i][j] = x
+    end
+  end
+
+  unless method_defined?(:row_count)
+    def row_count
+      @rows.size
+    end
+  end
+
+  unless method_defined?(:column_count)
+    def column_count
+      column_vectors.length
+    end
   end
 end
 
