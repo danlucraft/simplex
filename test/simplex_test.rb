@@ -1,8 +1,8 @@
-require 'minitest/autorun'
+require 'test/unit'
 $:.push(File.expand_path("../../lib", __FILE__))
 require 'simplex'
 
-class SimplexTest < MiniTest::Unit::TestCase
+class SimplexTest < Test::Unit::TestCase
   def test_2x2
     result = Simplex.new(
       [1, 1],

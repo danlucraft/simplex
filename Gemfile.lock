@@ -1,0 +1,11 @@
+GEM
+  specs:
+    rake (10.1.0)
+    test-unit (2.0.0.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  rake
+  test-unit
