@@ -17,16 +17,21 @@ class Simplex
     @num_non_slack_vars = a.first.length
     @num_constraints    = b.length
     @num_vars           = @num_non_slack_vars + @num_constraints
-    @x                  = Array.new(@num_vars)
 
     # Set up initial matrix A and vectors b, c
     @c = Vector[*c.map {|c1| -1*c1 } + [0]*@num_constraints]
     @a = a.map {|a1| Vector[*(a1.clone + [0]*@num_constraints)]}
     @b = Vector[*b.clone]
+
+    unless @a.all? {|a| a.size == @c.size } and @b.size == @a.length
+      raise ArgumentError, "Input arrays have mismatched dimensions" 
+    end
+
     0.upto(@num_constraints - 1) {|i| @a[i][@num_non_slack_vars + i] = 1 }
 
     # set initial solution: all non-slack variables = 0
-    @basic_vars = ((@num_non_slack_vars)...(@num_vars)).to_a
+    @x          = Vector[*([0]*@num_vars)]
+    @basic_vars = (@num_non_slack_vars...@num_vars).to_a
     update_solution
   end
 

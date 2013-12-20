@@ -132,6 +132,44 @@ class SimplexTest < Test::Unit::TestCase
     assert_equal [1, 0, 1, 0], result
   end
 
+  def test_error_mismatched_dimensions
+    assert_raise ArgumentError do
+      result = Simplex.new(
+        [10, -57, -9],
+        [
+          [0.5, -5.5, -2.5, 9],
+          [0.5, -1.5, -0.5, 1],
+          [  1,    0,    0, 0]
+        ],
+        [0, 0, 1]
+      )
+    end
+
+    assert_raise ArgumentError do
+      result = Simplex.new(
+        [10, -57, -9, 2],
+        [
+          [0.5, -5.5, 9, 4],
+          [0.5, -1.5, 1],
+          [  1,    0, 0]
+        ],
+        [0, 0, 1]
+      )
+    end
+
+    assert_raise ArgumentError do
+      result = Simplex.new(
+        [10, -57, -9, 2],
+        [
+          [0.5, -5.5, 9, 4],
+          [0.5, -1.5, 1, 5],
+          [  1,    0, 0, 5]
+        ],
+        [0, 1]
+      )
+    end
+  end
+
   def test_manual_iteration
     simplex = Simplex.new(
       [10, -57, -9, -24],
