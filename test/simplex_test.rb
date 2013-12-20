@@ -129,6 +129,25 @@ class SimplexTest < Test::Unit::TestCase
       ],
       [0, 0, 1]
     ).solution
+    assert_equal [1, 0, 1, 0], result
+  end
+
+  def test_manual_iteration
+    simplex = Simplex.new(
+      [10, -57, -9, -24],
+      [
+        [0.5, -5.5, -2.5, 9],
+        [0.5, -1.5, -0.5, 1],
+        [  1,    0,    0, 0]
+      ],
+      [0, 0, 1]
+    )
+    while simplex.can_improve?
+      assert simplex.formatted_tableau.is_a?(String)
+      simplex.pivot
+    end
+    result = simplex.solution
+    assert_equal [1, 0, 1, 0], result
   end
 
 end

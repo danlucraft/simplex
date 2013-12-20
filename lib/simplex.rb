@@ -1,6 +1,7 @@
 require 'matrix'
 
 class Matrix
+  # Ruby 2.0 backports for 1.9
   unless method_defined?(:[]=)
     def []=(i, j, x)
       @rows[i][j] = x
@@ -137,27 +138,6 @@ class Simplex
     end
   end
 
-  def formatted_tableau(pivot_column=nil, pivot_row=nil)
-    num_cols = @c.size + 1
-    c = @c.to_a.map {|c| "%2.3f" % c }
-    b = @b.to_a.map {|b| "%2.3f" % b }
-    a = @a.to_a.map {|ar| ar.map {|a| "%2.3f" % a}}
-    if pivot_row
-      a[pivot_row][pivot_column] = "*" + a[pivot_row][pivot_column]
-    end
-    max = (c + b + a + ["1234567"]).flatten.map(&:length).max
-    result = []
-    result << c.map {|c| c.rjust(max, " ") }
-    a.zip(b) do |arow, brow|
-      result << (arow + [brow]).map {|a| a.rjust(max, " ") }
-      result.last.insert(arow.length, "|")
-    end
-    lines = result.map {|b| b.join("  ") }
-    max_line_length = lines.map(&:length).max
-    lines.insert(1, "-"*max_line_length)
-    lines.join("\n")
-  end
-
   def minimum_coefficient_ratio_row_ix(column_ix)
     current_min_value = nil
     current_min_index = nil
@@ -174,5 +154,31 @@ class Simplex
     end
     return current_min_index
   end
+
+  def formatted_tableau
+    pivot_column = entering_variable_ix
+    pivot_row    = minimum_coefficient_ratio_row_ix(pivot_column)
+    num_cols = @c.size + 1
+    c = formatted_values(@c.to_a)
+    b = formatted_values(@b.to_a)
+    a = @a.to_a.map {|ar| formatted_values(ar) }
+    a[pivot_row][pivot_column] = "*" + a[pivot_row][pivot_column]
+    max = (c + b + a + ["1234567"]).flatten.map(&:length).max
+    result = []
+    result << c.map {|c| c.rjust(max, " ") }
+    a.zip(b) do |arow, brow|
+      result << (arow + [brow]).map {|a| a.rjust(max, " ") }
+      result.last.insert(arow.length, "|")
+    end
+    lines = result.map {|b| b.join("  ") }
+    max_line_length = lines.map(&:length).max
+    lines.insert(1, "-"*max_line_length)
+    lines.join("\n")
+  end
+
+  def formatted_values(array)
+    array.map {|c| "%2.3f" % c }
+  end
+
 end
 
