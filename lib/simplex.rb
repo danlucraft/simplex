@@ -1,26 +1,5 @@
 require 'matrix'
 
-class Matrix
-  # Ruby 2.0 backports for 1.9
-  unless method_defined?(:[]=)
-    def []=(i, j, x)
-      @rows[i][j] = x
-    end
-  end
-
-  unless method_defined?(:row_count)
-    def row_count
-      @rows.size
-    end
-  end
-
-  unless method_defined?(:column_count)
-    def column_count
-      column_vectors.length
-    end
-  end
-end
-
 class Vector
   public :[]=
 end
@@ -42,9 +21,9 @@ class Simplex
 
     # Set up initial matrix A and vectors b, c
     @c = Vector[*c.map {|c1| -1*c1 } + [0]*@num_constraints]
-    @a = Matrix[*a.map {|a1| a1.clone + [0]*@num_constraints}]
+    @a = a.map {|a1| Vector[*(a1.clone + [0]*@num_constraints)]}
     @b = Vector[*b.clone]
-    0.upto(@num_constraints - 1) {|i| @a[i, @num_non_slack_vars + i] = 1 }
+    0.upto(@num_constraints - 1) {|i| @a[i][@num_non_slack_vars + i] = 1 }
 
     # set initial solution: all non-slack variables = 0
     @basic_vars = ((@num_non_slack_vars)...(@num_vars)).to_a
@@ -65,7 +44,7 @@ class Simplex
 
     @basic_vars.each do |basic_var|
       row_with_1 = row_indices.detect do |row_ix|
-        @a[row_ix, basic_var] == 1
+        @a[row_ix][basic_var] == 1
       end
       @x[basic_var] = @b[row_with_1]
     end
@@ -96,37 +75,37 @@ class Simplex
     pivot_column = entering_variable
     pivot_row    = pivot_row(pivot_column)
     leaving_var  = basic_variable_in_row(pivot_row)
+    replace_basic_variable(leaving_var => pivot_column)
 
-    @basic_vars.delete(leaving_var)
-    @basic_vars << pivot_column
-    @basic_vars.sort!
-
-    pivot_ratio = Rational(1, @a[pivot_row, pivot_column])
+    pivot_ratio = Rational(1, @a[pivot_row][pivot_column])
 
     # update pivot row
-    column_indices.each do |column_ix|
-      @a[pivot_row, column_ix] = pivot_ratio * @a[pivot_row, column_ix]
-    end
+    @a[pivot_row] *= pivot_ratio
     @b[pivot_row] = pivot_ratio * @b[pivot_row]
 
     # update objective
-    @c -= @c[pivot_column] * @a.row(pivot_row)
+    @c -= @c[pivot_column] * @a[pivot_row]
 
     # update A and B
     (row_indices - [pivot_row]).each do |row_ix|
-      ratio = @a[row_ix, pivot_column]
-      column_indices.each do |column_ix|
-        @a[row_ix, column_ix] -= ratio * @a[pivot_row, column_ix]
-      end
-      @b[row_ix] -= ratio * @b[pivot_row]
+      r = @a[row_ix][pivot_column]
+      @a[row_ix] -= r * @a[pivot_row]
+      @b[row_ix] -= r * @b[pivot_row]
     end
 
     update_solution
   end
 
+  def replace_basic_variable(hash)
+    from, to = hash.keys.first, hash.values.first
+    @basic_vars.delete(from)
+    @basic_vars << to
+    @basic_vars.sort!
+  end
+
   def pivot_row(column_ix)
     row_ix_a_and_b = row_indices.map { |row_ix|
-      [row_ix, @a[row_ix, column_ix], @b[row_ix]]
+      [row_ix, @a[row_ix][column_ix], @b[row_ix]]
     }.reject { |_, a, b|
       a == 0
     }.reject { |_, a, b|
@@ -140,16 +119,16 @@ class Simplex
 
   def basic_variable_in_row(pivot_row)
     column_indices.detect do |column_ix|
-      @a[pivot_row, column_ix] == 1 and @basic_vars.include?(column_ix)
+      @a[pivot_row][column_ix] == 1 and @basic_vars.include?(column_ix)
     end
   end
 
   def row_indices
-    (0...@a.row_count).to_a
+    (0...@a.length).to_a
   end
 
   def column_indices
-    (0...@a.column_count).to_a
+    (0...@a.first.size).to_a
   end
 
   def formatted_tableau
@@ -158,9 +137,9 @@ class Simplex
     num_cols = @c.size + 1
     c = formatted_values(@c.to_a)
     b = formatted_values(@b.to_a)
-    a = @a.to_a.map {|ar| formatted_values(ar) }
+    a = @a.to_a.map {|ar| formatted_values(ar.to_a) }
     a[pivot_row][pivot_column] = "*" + a[pivot_row][pivot_column]
-    max = (c + b + a + ["1234567"]).flatten.map(&:length).max
+    max = (c + b + a + ["1234567"]).flatten.map(&:size).max
     result = []
     result << c.map {|c| c.rjust(max, " ") }
     a.zip(b) do |arow, brow|
@@ -188,6 +167,10 @@ class Simplex
       end
     end
     best_element
+  end
+
+  def assert(boolean)
+    raise unless boolean
   end
 
 end
