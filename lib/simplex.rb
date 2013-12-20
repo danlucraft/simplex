@@ -51,6 +51,26 @@ class Simplex
     update_solution
   end
 
+  def solution
+    solve
+    current_solution
+  end
+
+  def current_solution
+    @x.to_a[0...@num_non_slack_vars]
+  end
+
+  def update_solution
+    0.upto(@num_vars - 1) {|i| @x[i] = 0 }
+
+    @basic_vars.each do |basic_var|
+      row_with_1 = row_indices.detect do |row_ix|
+        @a[row_ix, basic_var] == 1
+      end
+      @x[basic_var] = @b[row_with_1]
+    end
+  end
+
   def solve
     while can_improve?
       @pivot_count += 1
@@ -59,105 +79,82 @@ class Simplex
     end
   end
 
+  def can_improve?
+    !!entering_variable
+  end
+
+  def variables
+    (0...@c.size).to_a
+  end
+
+  def entering_variable
+    variables.select { |var| @c[var] < 0 }.
+              min_by { |var| @c[var] }
+  end
+
   def pivot
-    pivot_column = entering_variable_ix
-    pivot_row    = minimum_coefficient_ratio_row_ix(pivot_column)
-    leaving_var = leaving_variable(pivot_row)
+    pivot_column = entering_variable
+    pivot_row    = pivot_row(pivot_column)
+    leaving_var  = basic_variable_in_row(pivot_row)
+
     @basic_vars.delete(leaving_var)
-
-    # update objective
-    c_ratio = Rational(@c[pivot_column], @a[pivot_row, pivot_column])
-    @c = @c - (@a.row(pivot_row)*c_ratio)
-
-    # update pivot row
-    ratio = Rational(1, @a[pivot_row, pivot_column])
-    0.upto(@a.column_count - 1) do |column_ix|
-      @a[pivot_row, column_ix] = ratio * @a[pivot_row, column_ix]
-    end
-    @b[pivot_row] = ratio * @b[pivot_row]
-
-    # update A and B
-    0.upto(@a.row_count - 1) do |row_ix|
-      next if row_ix == pivot_row
-      ratio = @a[row_ix, pivot_column]
-      0.upto(@a.column_count - 1) do |column_ix|
-        @a[row_ix, column_ix] = @a[row_ix, column_ix] - ratio*@a[pivot_row, column_ix]
-      end
-      @b[row_ix] = @b[row_ix] - ratio*@b[pivot_row]
-    end
-
     @basic_vars << pivot_column
     @basic_vars.sort!
+
+    pivot_ratio = Rational(1, @a[pivot_row, pivot_column])
+
+    # update pivot row
+    column_indices.each do |column_ix|
+      @a[pivot_row, column_ix] = pivot_ratio * @a[pivot_row, column_ix]
+    end
+    @b[pivot_row] = pivot_ratio * @b[pivot_row]
+
+    # update objective
+    @c -= @c[pivot_column] * @a.row(pivot_row)
+
+    # update A and B
+    (row_indices - [pivot_row]).each do |row_ix|
+      ratio = @a[row_ix, pivot_column]
+      column_indices.each do |column_ix|
+        @a[row_ix, column_ix] -= ratio * @a[pivot_row, column_ix]
+      end
+      @b[row_ix] -= ratio * @b[pivot_row]
+    end
+
     update_solution
   end
 
-  def update_solution
-    0.upto(@num_vars - 1) {|i| @x[i] = 0 }
-    @basic_vars.each do |basic_var|
-      row_coeff_1 = nil
-      0.upto(@a.row_count - 1) do |row_ix|
-        coeff = @a[row_ix, basic_var]
-        if coeff == 1
-          if row_coeff_1 == nil
-            row_coeff_1 = row_ix
-          end
-        end
-      end
-      @x[basic_var] = @b[row_coeff_1]
+  def pivot_row(column_ix)
+    row_ix_a_and_b = row_indices.map { |row_ix|
+      [row_ix, @a[row_ix, column_ix], @b[row_ix]]
+    }.reject { |_, a, b|
+      a == 0
+    }.reject { |_, a, b|
+      (b < 0 or a < 0) and !(b < 0 and a < 0)  # negative sign check
+    }
+    row_ix, _, _ = *last_min_by(row_ix_a_and_b) { |_, a, b|
+      Rational(b, a)
+    }
+    row_ix
+  end
+
+  def basic_variable_in_row(pivot_row)
+    column_indices.detect do |column_ix|
+      @a[pivot_row, column_ix] == 1 and @basic_vars.include?(column_ix)
     end
   end
 
-  def solution
-    solve
-    @x.to_a[0...@num_non_slack_vars]
+  def row_indices
+    (0...@a.row_count).to_a
   end
 
-  def can_improve?
-    !!entering_variable_ix
-  end
-
-  def entering_variable_ix
-    current_min_value = nil
-    current_min_index = nil
-    @c.each_with_index do |v, i| 
-      if v < 0
-        if current_min_value == nil || v < current_min_value
-          current_min_value = v
-          current_min_index = i
-        end
-      end
-    end
-    current_min_index
-  end
-
-  def leaving_variable(pivot_row)
-    0.upto(@a.column_count - 1) do |column_ix|
-      if @a[pivot_row, column_ix] == 1 and @basic_vars.include?(column_ix)
-        return column_ix
-      end
-    end
-  end
-
-  def minimum_coefficient_ratio_row_ix(column_ix)
-    current_min_value = nil
-    current_min_index = nil
-    0.upto(@a.row_count - 1) do |row_ix|
-      next if @a[row_ix, column_ix] == 0
-      b_val = @b[row_ix]
-      a_val = @a[row_ix, column_ix]
-      ratio = Rational(b_val, a_val)
-      is_negative = (@b[row_ix] < 0 || @a[row_ix, column_ix] < 0) && !(@b[row_ix] < 0 && @a[row_ix, column_ix] < 0)
-      if !is_negative && (!current_min_value || ratio <= current_min_value)
-        current_min_value = ratio
-        current_min_index = row_ix
-      end
-    end
-    return current_min_index
+  def column_indices
+    (0...@a.column_count).to_a
   end
 
   def formatted_tableau
-    pivot_column = entering_variable_ix
-    pivot_row    = minimum_coefficient_ratio_row_ix(pivot_column)
+    pivot_column = entering_variable
+    pivot_row    = pivot_row(pivot_column)
     num_cols = @c.size + 1
     c = formatted_values(@c.to_a)
     b = formatted_values(@b.to_a)
@@ -178,6 +175,19 @@ class Simplex
 
   def formatted_values(array)
     array.map {|c| "%2.3f" % c }
+  end
+
+  # like Enumerable#min_by except if multiple values are minimum 
+  # it returns the last
+  def last_min_by(array)
+    best_element, best_value = nil, nil
+    array.each do |element|
+      value = yield element
+      if !best_element || value <= best_value
+        best_element, best_value = element, value
+      end
+    end
+    best_element
   end
 
 end
