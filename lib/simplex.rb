@@ -114,7 +114,7 @@ class Simplex
     }.reject { |_, a, b|
       a == 0
     }.reject { |_, a, b|
-      (b < 0 or a < 0) and !(b < 0 and a < 0)  # negative sign check
+      (b < 0) ^ (a < 0) # negative sign check
     }
     row_ix, _, _ = *last_min_by(row_ix_a_and_b) { |_, a, b|
       Rational(b, a)
