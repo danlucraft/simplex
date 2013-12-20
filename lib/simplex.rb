@@ -25,12 +25,14 @@ class Vector
 end
 
 class Simplex
-  DEFAULT_MAX_ITERATIONS = 10_000
+  DEFAULT_MAX_PIVOTS = 10_000
 
-  attr_accessor :max_iterations
+  attr_accessor :max_pivots
 
   def initialize(c, a, b)
-    @max_iterations = DEFAULT_MAX_ITERATIONS
+    @pivot_count = 0
+    @max_pivots = DEFAULT_MAX_PIVOTS
+
     # Problem dimensions
     @num_non_slack_vars = a.first.length
     @num_constraints    = b.length
@@ -43,57 +45,49 @@ class Simplex
     @b = Vector[*b.clone]
     0.upto(@num_constraints - 1) {|i| @a[i, @num_non_slack_vars + i] = 1 }
 
-    @basic_vars = ((@num_non_slack_vars)...(@num_vars)).to_a
-
     # set initial solution: all non-slack variables = 0
+    @basic_vars = ((@num_non_slack_vars)...(@num_vars)).to_a
     update_solution
-    @solved = false
   end
 
   def solve
-    return if @solved
-    i = 0
     while can_improve?
-      i += 1
-      raise "Too many iterations" if i > max_iterations 
+      @pivot_count += 1
+      raise "Too many pivots" if @pivot_count > max_pivots 
+      pivot
+    end
+  end
 
-      pivot_column = entering_variable_ix
-      pivot_row    = minimum_coefficient_ratio_row_ix(pivot_column)
-      leaving_var = leaving_variable(pivot_row)
-      @basic_vars.delete(leaving_var)
+  def pivot
+    pivot_column = entering_variable_ix
+    pivot_row    = minimum_coefficient_ratio_row_ix(pivot_column)
+    leaving_var = leaving_variable(pivot_row)
+    @basic_vars.delete(leaving_var)
 
-      #puts
-      #puts formatted_tableau(pivot_column, pivot_row)
+    # update objective
+    c_ratio = Rational(@c[pivot_column], @a[pivot_row, pivot_column])
+    @c = @c - (@a.row(pivot_row)*c_ratio)
 
-      # update objective
-      c_ratio = Rational(@c[pivot_column], @a[pivot_row, pivot_column])
-      @c = @c - (@a.row(pivot_row)*c_ratio)
+    # update pivot row
+    ratio = Rational(1, @a[pivot_row, pivot_column])
+    0.upto(@a.column_count - 1) do |column_ix|
+      @a[pivot_row, column_ix] = ratio * @a[pivot_row, column_ix]
+    end
+    @b[pivot_row] = ratio * @b[pivot_row]
 
-      # update pivot row
-      ratio = Rational(1, @a[pivot_row, pivot_column])
+    # update A and B
+    0.upto(@a.row_count - 1) do |row_ix|
+      next if row_ix == pivot_row
+      ratio = @a[row_ix, pivot_column]
       0.upto(@a.column_count - 1) do |column_ix|
-        @a[pivot_row, column_ix] = ratio * @a[pivot_row, column_ix]
+        @a[row_ix, column_ix] = @a[row_ix, column_ix] - ratio*@a[pivot_row, column_ix]
       end
-      @b[pivot_row] = ratio * @b[pivot_row]
-
-      # update A and B
-      0.upto(@a.row_count - 1) do |row_ix|
-        next if row_ix == pivot_row
-        ratio = @a[row_ix, pivot_column]
-        0.upto(@a.column_count - 1) do |column_ix|
-          @a[row_ix, column_ix] = @a[row_ix, column_ix] - ratio*@a[pivot_row, column_ix]
-        end
-        @b[row_ix] = @b[row_ix] - ratio*@b[pivot_row]
-      end
-
-      @basic_vars << pivot_column
-      @basic_vars.sort!
-      update_solution
+      @b[row_ix] = @b[row_ix] - ratio*@b[pivot_row]
     end
 
-    #puts
-    #puts formatted_tableau
-    @solved = true
+    @basic_vars << pivot_column
+    @basic_vars.sort!
+    update_solution
   end
 
   def update_solution
