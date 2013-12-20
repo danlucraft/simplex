@@ -29,13 +29,35 @@ To solve the linear programming problem:
 
 Like this:
 
-    result = Simplex.new(
+    > simplex = Simplex.new(
       [1, 1],       # coefficients of objective function
       [             # matrix of inequality coefficients on the lhs ...
         [ 2,  1],
         [ 1,  2],
       ],
       [4, 3]        # .. and the rhs of the inequalities
-    ).solution
-    # => [(5/3), (2/3)]
+    )
+    > simplex.solution
+    => [(5/3), (2/3)]
 
+You can manually iterate the algorithm, and review the tableau at each step. For instance:
+
+    > simplex = Simplex.new([1, 1], [[2, 1], [1, 2]], [4, 3])
+    > puts simplex.formatted_tableau
+     -1.000   -1.000    0.000    0.000            
+    ----------------------------------------------
+     *2.000    1.000    1.000    0.000  |    4.000
+      1.000    2.000    0.000    1.000  |    3.000
+
+    > simplex.can_improve?
+    => true
+    > simplex.pivot
+    => [0, 3]
+
+    > puts simplex.formatted_tableau
+      0.000   -0.500    0.500    0.000            
+    ----------------------------------------------
+      1.000    0.500    0.500    0.000  |    2.000
+      0.000   *1.500   -0.500    1.000  |    1.000
+
+The asterisk indicates what will be the pivot row and column for the next pivot.
