@@ -117,6 +117,19 @@ class SimplexTest < Test::Unit::TestCase
     assert_equal [4, 0, 1], simplex.solution
   end
 
+  def test_3x3_g
+    simplex = Simplex.new(
+      [2, -1, 8],
+      [
+        [2, -4, 6],
+        [-1, 3, 4],
+        [0, 0, 2]
+      ],
+      [3, 2, 1]
+    )
+    assert_equal [Rational(17, 2), Rational(7,2), 0], simplex.solution
+  end
+
   def test_3x4
     result = Simplex.new(
       [100_000, 40_000, 18_000],
@@ -156,6 +169,20 @@ class SimplexTest < Test::Unit::TestCase
       [0, 0, 1]
     ).solution
     assert_equal [1, 0, 1, 0], result
+  end
+
+  def test_cycle2
+    simplex = Simplex.new(
+      [2, 3, -1, -12],
+      [
+        [-2, -9, 1, 9],
+        [Rational(1, 3), 1, Rational(-1, 3), -2],
+      ],
+      [0, 0]
+    )
+    assert_raise Simplex::UnboundedProblem do
+      simplex.solution
+    end
   end
 
   def test_error_mismatched_dimensions
