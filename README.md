@@ -6,6 +6,10 @@ simplex
 
 A naive pure-Ruby implementation of the Simplex algorithm for solving linear programming problems. Solves maximizations in standard form.
 
+### Changes
+
+**1.2**: Raises `Simplex::UnboundedProblem` if the problem is unbounded.
+
 ### Why?
 
 I wrote this because I needed to solve some small allocation problems for a web game I'm writing, 
