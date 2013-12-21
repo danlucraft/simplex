@@ -91,6 +91,32 @@ class SimplexTest < Test::Unit::TestCase
     assert_equal [600, 5_100, 800], result
   end
 
+  def test_3x3_e
+    simplex = Simplex.new(
+      [5, 4, 3],
+      [
+        [2, 3, 1],
+        [4, 1, 2],
+        [3, 4, 2]
+      ],
+      [5, 11, 8]
+    )
+    assert_equal [2, 0, 1], simplex.solution
+  end
+
+  def test_3x3_f
+    simplex = Simplex.new(
+      [3, 2, -4],
+      [
+        [1, 4, 0],
+        [2, 4,-2],
+        [1, 1,-2]
+      ],
+      [5, 6, 2]
+    )
+    assert_equal [4, 0, 1], simplex.solution
+  end
+
   def test_3x4
     result = Simplex.new(
       [100_000, 40_000, 18_000],
@@ -186,6 +212,52 @@ class SimplexTest < Test::Unit::TestCase
     end
     result = simplex.solution
     assert_equal [1, 0, 1, 0], result
+  end
+
+  def test_cup_factory
+    result = Simplex.new(
+      [25, 20],
+      [
+        [20, 12],
+        [1, 1]
+      ],
+      [1800, 8*15]
+    )
+    assert_equal [45, 75], result.solution
+  end
+
+  #def test_infeasible1
+  #  simplex = Simplex.new(
+  #    [2, -1],
+  #    [
+  #      [1, -1],
+  #      [-1, 1]
+  #    ],
+  #    [1, -2]
+  #  )
+  #  while simplex.can_improve?
+  #    puts 
+  #    puts simplex.formatted_tableau
+  #    simplex.pivot
+  #  end
+  #  p :done
+  #  puts 
+  #  puts simplex.formatted_tableau
+
+  #end
+  
+  def test_unbounded
+    simplex = Simplex.new(
+      [1, 1, 1],
+      [
+        [3, 1, -2],
+        [4, 3, 0]
+      ],
+      [5, 7]
+    )
+    assert_raise Simplex::UnboundedProblem do
+      simplex.solution
+    end
   end
 
 end

@@ -7,6 +7,9 @@ end
 class Simplex
   DEFAULT_MAX_PIVOTS = 10_000
 
+  class UnboundedProblem < StandardError
+  end
+
   attr_accessor :max_pivots
 
   def initialize(c, a, b)
@@ -79,6 +82,7 @@ class Simplex
   def pivot
     pivot_column = entering_variable
     pivot_row    = pivot_row(pivot_column)
+    raise UnboundedProblem unless pivot_row
     leaving_var  = basic_variable_in_row(pivot_row)
     replace_basic_variable(leaving_var => pivot_column)
 
@@ -137,13 +141,19 @@ class Simplex
   end
 
   def formatted_tableau
-    pivot_column = entering_variable
-    pivot_row    = pivot_row(pivot_column)
+    if can_improve?
+      pivot_column = entering_variable
+      pivot_row    = pivot_row(pivot_column)
+    else
+      pivot_row = nil
+    end
     num_cols = @c.size + 1
     c = formatted_values(@c.to_a)
     b = formatted_values(@b.to_a)
     a = @a.to_a.map {|ar| formatted_values(ar.to_a) }
-    a[pivot_row][pivot_column] = "*" + a[pivot_row][pivot_column]
+    if pivot_row
+      a[pivot_row][pivot_column] = "*" + a[pivot_row][pivot_column]
+    end
     max = (c + b + a + ["1234567"]).flatten.map(&:size).max
     result = []
     result << c.map {|c| c.rjust(max, " ") }
