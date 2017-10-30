@@ -1,5 +1,10 @@
 class Simplex
   module Parse
+    class Error < RuntimeError; end
+    class InvalidExpression < Error; end
+    class InvalidInequality < Error; end
+    class InvalidTerm < Error; end
+
     # coefficient concatenated with a single letter variable, e.g. "-1.23x"
     TERM_RGX = %r{
       \A                  # starts with
@@ -22,9 +27,10 @@ class Simplex
       lhs, rhs = str.split('<=')
       lhco, lhvar = self.expression(lhs)
       rht = self.tokenize(rhs)
-      raise "bad inequality: #{str}; bad rhs: #{rhs}" unless rht.size == 1
-      raise "bad rhs: #{rhs}" if !rht.first.match CONSTANT_RGX
-      return lhco, lhvar, rht.first.to_f
+      raise(InvalidInequality, "#{str}; bad rhs: #{rhs}") unless rht.size == 1
+      c = rht.first
+      raise(InvalidInequality, "bad rhs: #{rhs}") if !c.match CONSTANT_RGX
+      return lhco, lhvar, c.to_f
     end
 
     # ignore leading and trailing spaces
@@ -67,7 +73,7 @@ class Simplex
 
     def self.term(str)
       matches = str.match TERM_RGX
-      raise "bad term: #{str}" unless matches
+      raise(InvalidTerm, str) unless matches
       flt = (matches[2] || 1).to_f * (matches[1] ? -1 : 1)
       sym = matches[3].to_sym # consider matches[3].downcase.to_sym
       return flt, sym

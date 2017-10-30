@@ -38,7 +38,7 @@ describe Simplex::Parse do
       ["a2 + b2 = c2",
        "x + xy",
        "x * 2"].each { |invalid|
-        proc { P.expression(invalid) }.must_raise RuntimeError
+        proc { P.expression(invalid) }.must_raise P::Error
       }
     end
   end
@@ -68,7 +68,7 @@ describe Simplex::Parse do
        "0.94a - 22.1b <= -14.67c",
        "x < 0",
       ].each { |invalid|
-        proc { P.inequality(invalid) }.must_raise RuntimeError
+        proc { P.inequality(invalid) }.must_raise P::Error
       }
     end
   end
