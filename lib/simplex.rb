@@ -106,24 +106,24 @@ class Simplex
     @c -= @c[pivot_column] * @a[pivot_row]
 
     # update A and B
-    (row_indices - [pivot_row]).each do |row_ix|
+    (self.row_indices - [pivot_row]).each do |row_ix|
       r = @a[row_ix][pivot_column]
       @a[row_ix] -= r * @a[pivot_row]
       @b[row_ix] -= r * @b[pivot_row]
     end
 
-    update_solution
+    self.update_solution
   end
 
   def pivot_row(column_ix)
-    row_ix_a_and_b = row_indices.map { |row_ix|
+    row_ix_a_and_b = self.row_indices.map { |row_ix|
       [row_ix, @a[row_ix][column_ix], @b[row_ix]]
     }.reject { |_, a, b|
       a == 0
     }.reject { |_, a, b|
       (b < 0) ^ (a < 0) # negative sign check
     }
-    row_ix, _, _ = *last_min_by(row_ix_a_and_b) { |_, a, b|
+    row_ix, _, _ = *self.last_min_by(row_ix_a_and_b) { |_, a, b|
       Rational(b, a)
     }
     row_ix
@@ -138,30 +138,27 @@ class Simplex
   end
 
   def formatted_tableau
-    if can_improve?
-      pivot_column = entering_variable
-      pivot_row    = pivot_row(pivot_column)
+    if self.can_improve?
+      pivot_column = self.entering_variable
+      pivot_row    = self.pivot_row(pivot_column)
     else
       pivot_row = nil
     end
     # num_cols = @c.size + 1
-    c = formatted_values(@c.to_a)
-    b = formatted_values(@b.to_a)
-    a = @a.to_a.map {|ar| formatted_values(ar.to_a) }
+    c = self.formatted_values(@c.to_a)
+    b = self.formatted_values(@b.to_a)
+    a = @a.to_a.map {|ar| self.formatted_values(ar.to_a) }
     if pivot_row
       a[pivot_row][pivot_column] = "*" + a[pivot_row][pivot_column]
     end
     max = (c + b + a + ["1234567"]).flatten.map(&:size).max
     result = []
-    # result << c.map {|c| c.rjust(max, " ") }
-    result << c.map {|c1| c1.rjust(max, " ") }
+    result << c.map { |flt| flt.rjust(max, " ") }
     a.zip(b) do |arow, brow|
-      # result << (arow + [brow]).map {|a| a.rjust(max, " ") }
-      result << (arow + [brow]).map {|a1| a1.rjust(max, " ") }
+      result << (arow + [brow]).map { |val| val.rjust(max, " ") }
       result.last.insert(arow.length, "|")
     end
-    # lines = result.map {|b| b.join("  ") }
-    lines = result.map {|b1| b1.join("  ") }
+    lines = result.map {|ary| ary.join("  ") }
     max_line_length = lines.map(&:length).max
     lines.insert(1, "-"*max_line_length)
     lines.join("\n")
