@@ -10,6 +10,20 @@ class Simplex
   class UnboundedProblem < StandardError
   end
 
+  # like Enumerable#min_by except if multiple values are minimum
+  # it returns the last
+  def self.last_min_by array, &blk
+    best_element, best_value = nil, nil
+    array.each do |element|
+      value = yield element
+      # TODO: uh oh
+      if !best_element || value <= best_value
+        best_element, best_value = element, value
+      end
+    end
+    best_element
+  end
+
   attr_accessor :max_pivots
 
   # c - coefficients of objective function; size: num_vars
@@ -123,7 +137,7 @@ class Simplex
     }.reject { |_, a, b|
       (b < 0) ^ (a < 0) # negative sign check
     }
-    row_ix, _, _ = *self.last_min_by(row_ix_a_and_b) { |_, a, b|
+    row_ix, _, _ = *self.class.last_min_by(row_ix_a_and_b) { |_, a, b|
       Rational(b, a)
     }
     row_ix
@@ -161,19 +175,5 @@ class Simplex
     max_line_length = lines.map(&:length).max
     lines.insert(1, "-"*max_line_length)
     lines.join("\n")
-  end
-
-  # like Enumerable#min_by except if multiple values are minimum
-  # it returns the last
-  def last_min_by(array)
-    best_element, best_value = nil, nil
-    array.each do |element|
-      value = yield element
-      # TODO: uh oh
-      if !best_element || value <= best_value
-        best_element, best_value = element, value
-      end
-    end
-    best_element
   end
 end
