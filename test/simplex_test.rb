@@ -186,7 +186,7 @@ class SimplexTest < Test::Unit::TestCase
 
   def test_error_mismatched_dimensions
     assert_raise ArgumentError do
-      result = Simplex.new(
+      Simplex.new(
         [10, -57, -9],
         [
           [0.5, -5.5, -2.5, 9],
@@ -198,7 +198,7 @@ class SimplexTest < Test::Unit::TestCase
     end
 
     assert_raise ArgumentError do
-      result = Simplex.new(
+      Simplex.new(
         [10, -57, -9, 2],
         [
           [0.5, -5.5, 9, 4],
@@ -210,7 +210,7 @@ class SimplexTest < Test::Unit::TestCase
     end
 
     assert_raise ArgumentError do
-      result = Simplex.new(
+      Simplex.new(
         [10, -57, -9, 2],
         [
           [0.5, -5.5, 9, 4],
