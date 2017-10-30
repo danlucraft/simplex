@@ -93,8 +93,12 @@ class Simplex
   def pivot
     pivot_column = self.entering_variable or return nil
     pivot_row = self.pivot_row(pivot_column) or raise UnboundedProblem
-    leaving_var = self.column_indices.detect { |idx|
-      @a[pivot_row][idx] == 1 and @basic_vars.include?(idx)
+    leaving_var = nil
+    @a[pivot_row].each_with_index { |a, i|
+      if a == 1 and @basic_vars.include?(i)
+        leaving_var = i
+        break
+      end
     }
 
     @basic_vars.delete(leaving_var)
@@ -131,10 +135,6 @@ class Simplex
       idx, min_ratio = i, ratio if min_ratio.nil? or ratio <= min_ratio
     }
     idx
-  end
-
-  def column_indices
-    (0...@a.first.size).to_a
   end
 
   def formatted_tableau
