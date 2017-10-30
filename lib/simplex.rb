@@ -7,8 +7,9 @@ end
 class Simplex
   DEFAULT_MAX_PIVOTS = 10_000
 
-  class UnboundedProblem < StandardError
-  end
+  class UnboundedProblem < RuntimeError; end
+  class SanityCheck < RuntimeError; end
+  class TooManyPivots < RuntimeError; end
 
   attr_accessor :max_pivots
 
@@ -48,17 +49,17 @@ class Simplex
   def update_solution
     @x = Array.new(@num_vars, 0)
 
-    @basic_vars.each do |basic_var|
+    @basic_vars.each { |basic_var|
       idx = nil
       @num_constraints.times { |i|
         if @a[i][basic_var] == 1
-          idx = i
+          idx =i
           break
         end
       }
-      raise "no idx found for basic_var #{basic_var} in a" unless idx
+      raise(SanityCheck, "no idx for basic_var #{basic_var} in a") unless idx
       @x[basic_var] = @b[idx]
-    end
+    }
   end
 
   def solution
@@ -70,7 +71,7 @@ class Simplex
     count = 0
     while self.can_improve?
       count += 1
-      raise "too many pivots: #{count}" unless count < @max_pivots
+      raise(TooManyPivots, count.to_s) unless count < @max_pivots
       self.pivot
     end
   end
@@ -100,6 +101,7 @@ class Simplex
         break
       end
     }
+    raise(SanityCheck, "no leaving_var") if leaving_var.nil?
 
     @basic_vars.delete(leaving_var)
     @basic_vars.push(pivot_column)
