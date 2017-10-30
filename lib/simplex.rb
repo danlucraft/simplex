@@ -26,8 +26,9 @@ class Simplex
     @a = a.map {|a1| Vector[*(a1.clone + [0]*@num_constraints)]}
     @b = Vector[*b.clone]
 
-    unless @a.all? {|a| a.size == @c.size } and @b.size == @a.length
-      raise ArgumentError, "Input arrays have mismatched dimensions" 
+    # unless @a.all? {|a| a.size == @c.size } and @b.size == @a.length
+    unless @a.all? {|a1| a1.size == @c.size } and @b.size == @a.length
+      raise ArgumentError, "Input arrays have mismatched dimensions"
     end
 
     0.upto(@num_constraints - 1) {|i| @a[i][@num_non_slack_vars + i] = 1 }
@@ -147,7 +148,7 @@ class Simplex
     else
       pivot_row = nil
     end
-    num_cols = @c.size + 1
+    # num_cols = @c.size + 1
     c = formatted_values(@c.to_a)
     b = formatted_values(@b.to_a)
     a = @a.to_a.map {|ar| formatted_values(ar.to_a) }
@@ -156,12 +157,15 @@ class Simplex
     end
     max = (c + b + a + ["1234567"]).flatten.map(&:size).max
     result = []
-    result << c.map {|c| c.rjust(max, " ") }
+    # result << c.map {|c| c.rjust(max, " ") }
+    result << c.map {|c1| c1.rjust(max, " ") }
     a.zip(b) do |arow, brow|
-      result << (arow + [brow]).map {|a| a.rjust(max, " ") }
+      # result << (arow + [brow]).map {|a| a.rjust(max, " ") }
+      result << (arow + [brow]).map {|a1| a1.rjust(max, " ") }
       result.last.insert(arow.length, "|")
     end
-    lines = result.map {|b| b.join("  ") }
+    # lines = result.map {|b| b.join("  ") }
+    lines = result.map {|b1| b1.join("  ") }
     max_line_length = lines.map(&:length).max
     lines.insert(1, "-"*max_line_length)
     lines.join("\n")
