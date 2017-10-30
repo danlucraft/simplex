@@ -41,12 +41,12 @@ class Simplex
 
     # set initial solution: all non-slack variables = 0
     @basic_vars = (@num_non_slack_vars...@num_vars).to_a
-    update_solution
+    self.update_solution
   end
 
   def solution
-    solve
-    current_solution
+    self.solve
+    self.current_solution
   end
 
   def current_solution
@@ -66,7 +66,7 @@ class Simplex
 
   def solve
     count = 0
-    while can_improve?
+    while self.can_improve?
       count += 1
       raise "too many pivots: #{count}" unless count < @max_pivots
       self.pivot
@@ -74,7 +74,7 @@ class Simplex
   end
 
   def can_improve?
-    !!entering_variable
+    !!self.entering_variable
   end
 
   def entering_variable
@@ -84,8 +84,8 @@ class Simplex
   end
 
   def pivot
-    pivot_column = entering_variable
-    pivot_row    = pivot_row(pivot_column)
+    pivot_column = self.entering_variable
+    pivot_row    = self.pivot_row(pivot_column)
     raise UnboundedProblem unless pivot_row
     leaving_var = self.column_indices.detect { |idx|
       @a[pivot_row][idx] == 1 and @basic_vars.include?(idx)
