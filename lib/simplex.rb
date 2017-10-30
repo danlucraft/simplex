@@ -12,31 +12,43 @@ class Simplex
 
   attr_accessor :max_pivots
 
-  # c - coefficients of objective function
-  # a - inequality lhs coefficients
-  # b - inequality rhs constants
+  def self.new_vector(ary, num_constraints)
+    Vector[*(ary + Array.new(num_constraints, 0))]
+  end
+
+  # X = num vars
+  # Y = num inequalities
+
+  # c - coefficients of objective function (size X)
+  # a - inequality lhs coefficients, 2dim  (size Y, size X)
+  # b - inequality rhs constants           (size Y)
   def initialize(c, a, b)
+    num_vars = c.size
+    num_inequalities = b.size
+    raise(ArgumentError, "a doesn't match b") unless a.size == num_inequalities
+    raise(ArgumentError, "a doesn't match c") unless a.first.size == num_vars
+
     @max_pivots = DEFAULT_MAX_PIVOTS
 
     # Problem dimensions
-    @num_non_slack_vars = a.first.length
-    @num_constraints    = b.length
+    @num_non_slack_vars = num_vars
+    @num_constraints    = num_inequalities
     @num_vars           = @num_non_slack_vars + @num_constraints
 
     # Set up initial matrix A and vectors b, c
-    @c = Vector[*c.map {|c1| -1*c1 } + [0]*@num_constraints]
-    @a = a.map {|a1| Vector[*(a1.clone + [0]*@num_constraints)]}
-    @b = Vector[*b.clone]
+    @c = self.class.new_vector(c.map { |flt| -1 * flt }, @num_constraints)
+    @a = a.map { |ary|
+      if ary.size != @num_non_slack_vars
+        raise ArgumentError, "a is inconsistent"
+      end
+      self.class.new_vector(ary, @num_constraints)
+    }
+    @b = self.class.new_vector(b, 0)
 
-    # unless @a.all? {|a| a.size == @c.size } and @b.size == @a.length
-    unless @a.all? {|a1| a1.size == @c.size } and @b.size == @a.length
-      raise ArgumentError, "Input arrays have mismatched dimensions"
-    end
-
-    0.upto(@num_constraints - 1) {|i| @a[i][@num_non_slack_vars + i] = 1 }
+    @num_constraints.times { |i| @a[i][@num_non_slack_vars + i] = 1 }
 
     # set initial solution: all non-slack variables = 0
-    @x          = Vector[*([0]*@num_vars)]
+    @x = Array.new(@num_vars, 0)
     @basic_vars = (@num_non_slack_vars...@num_vars).to_a
     update_solution
   end
@@ -47,7 +59,7 @@ class Simplex
   end
 
   def current_solution
-    @x.to_a[0...@num_non_slack_vars]
+    @x[0...@num_non_slack_vars]
   end
 
   def update_solution
