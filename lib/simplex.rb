@@ -10,20 +10,6 @@ class Simplex
   class UnboundedProblem < StandardError
   end
 
-  # like Enumerable#min_by except if multiple values are minimum
-  # it returns the last
-  def self.last_min_by array, &blk
-    best_element, best_value = nil, nil
-    array.each do |element|
-      value = yield element
-      # TODO: uh oh
-      if !best_element || value <= best_value
-        best_element, best_value = element, value
-      end
-    end
-    best_element
-  end
-
   attr_accessor :max_pivots
 
   # c - coefficients of objective function; size: num_vars
@@ -130,15 +116,15 @@ class Simplex
   end
 
   def pivot_row(column_ix)
-    row_ix_a_and_b = self.row_indices.map { |row_ix|
-      [row_ix, @a[row_ix][column_ix], @b[row_ix]]
-    }.reject { |_, a, b|
-      a == 0 or (b < 0) ^ (a < 0) # negative sign check
+    min_ratio = nil
+    idx = nil
+    self.row_indices.each { |i|
+      a, b = @a[i][column_ix], @b[i]
+      next if a == 0 or (b < 0) ^ (a < 0)
+      ratio = Rational(b, a)
+      idx, min_ratio = i, ratio if min_ratio.nil? or ratio <= min_ratio
     }
-    row_ix, _, _ = *self.class.last_min_by(row_ix_a_and_b) { |_, a, b|
-      Rational(b, a)
-    }
-    row_ix
+    idx
   end
 
   def row_indices
