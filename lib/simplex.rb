@@ -62,7 +62,7 @@ class Simplex
   def solve
     while can_improve?
       @pivot_count += 1
-      raise "Too many pivots" if @pivot_count > max_pivots 
+      raise "Too many pivots" if @pivot_count > max_pivots
       pivot
     end
   end
@@ -175,7 +175,7 @@ class Simplex
     array.map {|c| "%2.3f" % c }
   end
 
-  # like Enumerable#min_by except if multiple values are minimum 
+  # like Enumerable#min_by except if multiple values are minimum
   # it returns the last
   def last_min_by(array)
     best_element, best_value = nil, nil
@@ -193,4 +193,3 @@ class Simplex
   end
 
 end
-

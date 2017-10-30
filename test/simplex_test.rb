@@ -262,16 +262,16 @@ class SimplexTest < Test::Unit::TestCase
   #    [1, -2]
   #  )
   #  while simplex.can_improve?
-  #    puts 
+  #    puts
   #    puts simplex.formatted_tableau
   #    simplex.pivot
   #  end
   #  p :done
-  #  puts 
+  #  puts
   #  puts simplex.formatted_tableau
 
   #end
-  
+
   def test_unbounded
     simplex = Simplex.new(
       [1, 1, 1],
