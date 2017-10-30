@@ -23,7 +23,7 @@ class Simplex
 
     @max_pivots = DEFAULT_MAX_PIVOTS
 
-    # Problem dimensions
+    # Problem dimensions; these never change
     @num_non_slack_vars = num_vars
     @num_constraints    = num_inequalities
     @num_vars           = @num_non_slack_vars + @num_constraints
@@ -40,7 +40,6 @@ class Simplex
     @b = Vector.elements(b, true)
 
     # set initial solution: all non-slack variables = 0
-    @x = Array.new(@num_vars, 0)
     @basic_vars = (@num_non_slack_vars...@num_vars).to_a
     update_solution
   end
@@ -78,13 +77,10 @@ class Simplex
     !!entering_variable
   end
 
-  def variables
-    (0...@c.size).to_a
-  end
-
   def entering_variable
-    variables.select { |var| @c[var] < 0 }.
-              min_by { |var| @c[var] }
+    (0...@c.size).to_a.select { |var|
+      @c[var] < 0
+    }.min_by { |var| @c[var] }
   end
 
   def pivot
@@ -92,7 +88,9 @@ class Simplex
     pivot_row    = pivot_row(pivot_column)
     raise UnboundedProblem unless pivot_row
     leaving_var  = basic_variable_in_row(pivot_row)
-    replace_basic_variable(leaving_var => pivot_column)
+    @basic_vars.delete(leaving_var)
+    @basic_vars.push(pivot_column)
+    @basic_vars.sort!
 
     pivot_ratio = Rational(1, @a[pivot_row][pivot_column])
 
@@ -111,13 +109,6 @@ class Simplex
     end
 
     update_solution
-  end
-
-  def replace_basic_variable(hash)
-    from, to = hash.keys.first, hash.values.first
-    @basic_vars.delete(from)
-    @basic_vars << to
-    @basic_vars.sort!
   end
 
   def pivot_row(column_ix)
