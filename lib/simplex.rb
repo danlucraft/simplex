@@ -59,7 +59,7 @@ class Simplex
 
     @basic_vars.each do |basic_var|
       idx = nil
-      @a.size.times { |i|
+      @num_constraints.times { |i|
         if @a[i][basic_var] == 1
           idx = i
           break
@@ -111,7 +111,7 @@ class Simplex
     @c -= @c[pivot_column] * @a[pivot_row]
 
     # update A and B
-    @a.size.times { |i|
+    @num_constraints.times { |i|
       next if i == pivot_row
       r = @a[i][pivot_column]
       @a[i] -= r * @a[pivot_row]
@@ -124,7 +124,7 @@ class Simplex
   def pivot_row(column_ix)
     min_ratio = nil
     idx = nil
-    @a.size.times { |i|
+    @num_constraints.times { |i|
       a, b = @a[i][column_ix], @b[i]
       next if a == 0 or (b < 0) ^ (a < 0)
       ratio = Rational(b, a)
