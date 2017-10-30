@@ -87,7 +87,10 @@ class Simplex
     pivot_column = entering_variable
     pivot_row    = pivot_row(pivot_column)
     raise UnboundedProblem unless pivot_row
-    leaving_var  = basic_variable_in_row(pivot_row)
+    leaving_var = self.column_indices.detect { |idx|
+      @a[pivot_row][idx] == 1 and @basic_vars.include?(idx)
+    }
+
     @basic_vars.delete(leaving_var)
     @basic_vars.push(pivot_column)
     @basic_vars.sort!
@@ -123,12 +126,6 @@ class Simplex
       Rational(b, a)
     }
     row_ix
-  end
-
-  def basic_variable_in_row(pivot_row)
-    column_indices.detect do |column_ix|
-      @a[pivot_row][column_ix] == 1 and @basic_vars.include?(column_ix)
-    end
   end
 
   def row_indices
