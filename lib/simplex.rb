@@ -174,6 +174,7 @@ class Simplex
     best_element, best_value = nil, nil
     array.each do |element|
       value = yield element
+      # TODO: uh oh
       if !best_element || value <= best_value
         best_element, best_value = element, value
       end
