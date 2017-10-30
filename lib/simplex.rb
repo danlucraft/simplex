@@ -7,9 +7,10 @@ end
 class Simplex
   DEFAULT_MAX_PIVOTS = 10_000
 
-  class UnboundedProblem < RuntimeError; end
-  class SanityCheck < RuntimeError; end
-  class TooManyPivots < RuntimeError; end
+  class Error < RuntimeError; end
+  class UnboundedProblem < Error; end
+  class SanityCheck < Error; end
+  class TooManyPivots < Error; end
 
   attr_accessor :max_pivots
 
