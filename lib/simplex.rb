@@ -12,16 +12,9 @@ class Simplex
 
   attr_accessor :max_pivots
 
-  def self.new_vector(ary, num_constraints)
-    Vector[*(ary + Array.new(num_constraints, 0))]
-  end
-
-  # X = num vars
-  # Y = num inequalities
-
-  # c - coefficients of objective function (size X)
-  # a - inequality lhs coefficients, 2dim  (size Y, size X)
-  # b - inequality rhs constants           (size Y)
+  # c - coefficients of objective function; size: num_vars
+  # a - inequality lhs coefficients;   2dim size: num_inequalities, num_vars
+  # b - inequality rhs constants            size: num_inequalities
   def initialize(c, a, b)
     num_vars = c.size
     num_inequalities = b.size
@@ -36,16 +29,15 @@ class Simplex
     @num_vars           = @num_non_slack_vars + @num_constraints
 
     # Set up initial matrix A and vectors b, c
-    @c = self.class.new_vector(c.map { |flt| -1 * flt }, @num_constraints)
-    @a = a.map { |ary|
+    @c = Vector[*(c.map { |flt| -1 * flt } + Array.new(@num_constraints, 0))]
+    @a = a.map.with_index { |ary, i|
       if ary.size != @num_non_slack_vars
         raise ArgumentError, "a is inconsistent"
       end
-      self.class.new_vector(ary, @num_constraints)
+      constraints = Array.new(@num_constraints) { |ci| ci == i ? 1 : 0 }
+      Vector[*(ary + constraints)]
     }
-    @b = self.class.new_vector(b, 0)
-
-    @num_constraints.times { |i| @a[i][@num_non_slack_vars + i] = 1 }
+    @b = Vector.elements(b, true)
 
     # set initial solution: all non-slack variables = 0
     @x = Array.new(@num_vars, 0)
@@ -63,7 +55,7 @@ class Simplex
   end
 
   def update_solution
-    0.upto(@num_vars - 1) {|i| @x[i] = 0 }
+    @x = Array.new(@num_vars, 0)
 
     @basic_vars.each do |basic_var|
       row_with_1 = row_indices.detect do |row_ix|
