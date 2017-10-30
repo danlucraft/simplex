@@ -133,9 +133,7 @@ class Simplex
     row_ix_a_and_b = self.row_indices.map { |row_ix|
       [row_ix, @a[row_ix][column_ix], @b[row_ix]]
     }.reject { |_, a, b|
-      a == 0
-    }.reject { |_, a, b|
-      (b < 0) ^ (a < 0) # negative sign check
+      a == 0 or (b < 0) ^ (a < 0) # negative sign check
     }
     row_ix, _, _ = *self.class.last_min_by(row_ix_a_and_b) { |_, a, b|
       Rational(b, a)
