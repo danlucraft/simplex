@@ -75,22 +75,19 @@ class Simplex
   end
 
   def can_improve?
-    !!self.entering_variable
+    !self.entering_variable.nil?
   end
 
   # idx of @c's minimum negative value
   # nil when no improvement is possible
   #
   def entering_variable
-    (0...@c.size).to_a.select { |var|
-      @c[var] < 0
-    }.min_by { |var| @c[var] }
+    (0...@c.size).select { |i| @c[i] < 0 }.min_by { |i| @c[i] }
   end
 
   def pivot
-    pivot_column = self.entering_variable
-    pivot_row    = self.pivot_row(pivot_column)
-    raise UnboundedProblem unless pivot_row
+    pivot_column = self.entering_variable or return nil
+    pivot_row = self.pivot_row(pivot_column) or raise UnboundedProblem
     leaving_var = self.column_indices.detect { |idx|
       @a[pivot_row][idx] == 1 and @basic_vars.include?(idx)
     }
