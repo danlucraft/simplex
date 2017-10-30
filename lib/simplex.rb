@@ -144,28 +144,23 @@ class Simplex
     else
       pivot_row = nil
     end
-    # num_cols = @c.size + 1
-    c = self.formatted_values(@c.to_a)
-    b = self.formatted_values(@b.to_a)
-    a = @a.to_a.map {|ar| self.formatted_values(ar.to_a) }
+    c = @c.to_a.map { |flt| "%2.3f" % flt }
+    b = @b.to_a.map { |flt| "%2.3f" % flt }
+    a = @a.to_a.map { |vec| vec.to_a.map { |flt| "%2.3f" % flt } }
     if pivot_row
       a[pivot_row][pivot_column] = "*" + a[pivot_row][pivot_column]
     end
     max = (c + b + a + ["1234567"]).flatten.map(&:size).max
     result = []
-    result << c.map { |flt| flt.rjust(max, " ") }
+    result << c.map { |str| str.rjust(max, " ") }
     a.zip(b) do |arow, brow|
       result << (arow + [brow]).map { |val| val.rjust(max, " ") }
       result.last.insert(arow.length, "|")
     end
-    lines = result.map {|ary| ary.join("  ") }
+    lines = result.map { |ary| ary.join("  ") }
     max_line_length = lines.map(&:length).max
     lines.insert(1, "-"*max_line_length)
     lines.join("\n")
-  end
-
-  def formatted_values(array)
-    array.map {|c| "%2.3f" % c }
   end
 
   # like Enumerable#min_by except if multiple values are minimum
