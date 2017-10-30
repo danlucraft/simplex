@@ -12,6 +12,9 @@ class Simplex
 
   attr_accessor :max_pivots
 
+  # c - coefficients of objective function
+  # a - inequality lhs coefficients
+  # b - inequality rhs constants
   def initialize(c, a, b)
     @pivot_count = 0
     @max_pivots = DEFAULT_MAX_PIVOTS
@@ -187,9 +190,4 @@ class Simplex
     end
     best_element
   end
-
-  def assert(boolean)
-    raise unless boolean
-  end
-
 end
