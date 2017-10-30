@@ -44,15 +44,6 @@ class Simplex
     self.update_solution
   end
 
-  def solution
-    self.solve
-    self.current_solution
-  end
-
-  def current_solution
-    @x[0...@num_non_slack_vars]
-  end
-
   # does not modify vector / matrix
   def update_solution
     @x = Array.new(@num_vars, 0)
@@ -70,6 +61,11 @@ class Simplex
     end
   end
 
+  def solution
+    self.solve
+    self.current_solution
+  end
+
   def solve
     count = 0
     while self.can_improve?
@@ -77,6 +73,10 @@ class Simplex
       raise "too many pivots: #{count}" unless count < @max_pivots
       self.pivot
     end
+  end
+
+  def current_solution
+    @x[0...@num_non_slack_vars]
   end
 
   def can_improve?
