@@ -58,10 +58,15 @@ class Simplex
     @x = Array.new(@num_vars, 0)
 
     @basic_vars.each do |basic_var|
-      row_with_1 = row_indices.detect do |row_ix|
-        @a[row_ix][basic_var] == 1
-      end
-      @x[basic_var] = @b[row_with_1]
+      idx = nil
+      @a.size.times { |i|
+        if @a[i][basic_var] == 1
+          idx = i
+          break
+        end
+      }
+      raise "no idx found for basic_var #{basic_var} in a" unless idx
+      @x[basic_var] = @b[idx]
     end
   end
 
@@ -106,11 +111,12 @@ class Simplex
     @c -= @c[pivot_column] * @a[pivot_row]
 
     # update A and B
-    (self.row_indices - [pivot_row]).each do |row_ix|
-      r = @a[row_ix][pivot_column]
-      @a[row_ix] -= r * @a[pivot_row]
-      @b[row_ix] -= r * @b[pivot_row]
-    end
+    @a.size.times { |i|
+      next if i == pivot_row
+      r = @a[i][pivot_column]
+      @a[i] -= r * @a[pivot_row]
+      @b[i] -= r * @b[pivot_row]
+    }
 
     self.update_solution
   end
@@ -118,17 +124,13 @@ class Simplex
   def pivot_row(column_ix)
     min_ratio = nil
     idx = nil
-    self.row_indices.each { |i|
+    @a.size.times { |i|
       a, b = @a[i][column_ix], @b[i]
       next if a == 0 or (b < 0) ^ (a < 0)
       ratio = Rational(b, a)
       idx, min_ratio = i, ratio if min_ratio.nil? or ratio <= min_ratio
     }
     idx
-  end
-
-  def row_indices
-    (0...@a.length).to_a
   end
 
   def column_indices
