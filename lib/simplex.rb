@@ -53,6 +53,7 @@ class Simplex
     @x[0...@num_non_slack_vars]
   end
 
+  # does not modify vector / matrix
   def update_solution
     @x = Array.new(@num_vars, 0)
 
@@ -77,6 +78,9 @@ class Simplex
     !!self.entering_variable
   end
 
+  # idx of @c's minimum negative value
+  # nil when no improvement is possible
+  #
   def entering_variable
     (0...@c.size).to_a.select { |var|
       @c[var] < 0
