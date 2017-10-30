@@ -16,7 +16,6 @@ class Simplex
   # a - inequality lhs coefficients
   # b - inequality rhs constants
   def initialize(c, a, b)
-    @pivot_count = 0
     @max_pivots = DEFAULT_MAX_PIVOTS
 
     # Problem dimensions
@@ -63,10 +62,11 @@ class Simplex
   end
 
   def solve
+    count = 0
     while can_improve?
-      @pivot_count += 1
-      raise "Too many pivots" if @pivot_count > max_pivots
-      pivot
+      count += 1
+      raise "too many pivots: #{count}" unless count < @max_pivots
+      self.pivot
     end
   end
 
