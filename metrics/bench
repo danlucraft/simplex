@@ -1,5 +1,5 @@
-/proc/loadavg 0.08 0.02 0.01 1/79 1931
+/proc/loadavg 0.01 0.01 0.00 1/79 3023
 Warming up --------------------------------------
-      Simplex Vector    46.000  i/100ms
+      Simplex Vector    54.000  i/100ms
 Calculating -------------------------------------
-      Simplex Vector    460.019  (± 0.9%) i/s -      1.380k in   3.000113s
+      Simplex Vector    546.614  (± 1.3%) i/s -      1.674k in   3.063034s
