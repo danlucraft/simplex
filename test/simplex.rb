@@ -1,8 +1,7 @@
-require 'test/unit'
-$:.push(File.expand_path("../../lib", __FILE__))
+require 'minitest/autorun'
 require 'simplex'
 
-class SimplexTest < Test::Unit::TestCase
+class SimplexTest < Minitest::Test
   def test_2x2
     result = Simplex.new(
       [1, 1],
@@ -180,14 +179,14 @@ class SimplexTest < Test::Unit::TestCase
       ],
       [0, 0]
     )
-    assert_raise Simplex::UnboundedProblem do
+    assert_raises Simplex::UnboundedProblem do
       simplex.solution
     end
   end
 
   def test_error_mismatched_dimensions
-    assert_raise ArgumentError do
-      result = Simplex.new(
+    assert_raises ArgumentError do
+      Simplex.new(
         [10, -57, -9],
         [
           [0.5, -5.5, -2.5, 9],
@@ -198,8 +197,8 @@ class SimplexTest < Test::Unit::TestCase
       )
     end
 
-    assert_raise ArgumentError do
-      result = Simplex.new(
+    assert_raises ArgumentError do
+      Simplex.new(
         [10, -57, -9, 2],
         [
           [0.5, -5.5, 9, 4],
@@ -210,8 +209,8 @@ class SimplexTest < Test::Unit::TestCase
       )
     end
 
-    assert_raise ArgumentError do
-      result = Simplex.new(
+    assert_raises ArgumentError do
+      Simplex.new(
         [10, -57, -9, 2],
         [
           [0.5, -5.5, 9, 4],
@@ -263,16 +262,16 @@ class SimplexTest < Test::Unit::TestCase
   #    [1, -2]
   #  )
   #  while simplex.can_improve?
-  #    puts 
+  #    puts
   #    puts simplex.formatted_tableau
   #    simplex.pivot
   #  end
   #  p :done
-  #  puts 
+  #  puts
   #  puts simplex.formatted_tableau
 
   #end
-  
+
   def test_unbounded
     simplex = Simplex.new(
       [1, 1, 1],
@@ -282,7 +281,7 @@ class SimplexTest < Test::Unit::TestCase
       ],
       [5, 7]
     )
-    assert_raise Simplex::UnboundedProblem do
+    assert_raises Simplex::UnboundedProblem do
       simplex.solution
     end
   end
