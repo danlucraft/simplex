@@ -1,9 +1,3 @@
-require 'matrix'
-
-class Vector
-  public :[]=
-end
-
 class Simplex
   DEFAULT_MAX_PIVOTS = 10_000
 
@@ -31,15 +25,14 @@ class Simplex
     @num_vars           = @num_non_slack_vars + @num_constraints
 
     # Set up initial matrix A and vectors b, c
-    @c = Vector[*(c.map { |flt| -1 * flt } + Array.new(@num_constraints, 0))]
+    @c = c.map { |flt| -1 * flt } + Array.new(@num_constraints, 0)
     @a = a.map.with_index { |ary, i|
       if ary.size != @num_non_slack_vars
         raise ArgumentError, "a is inconsistent"
       end
-      constraints = Array.new(@num_constraints) { |ci| ci == i ? 1 : 0 }
-      Vector[*(ary + constraints)]
+      ary + Array.new(@num_constraints) { |ci| ci == i ? 1 : 0 }
     }
-    @b = Vector.elements(b, true)
+    @b = b
 
     # set initial solution: all non-slack variables = 0
     @basic_vars = (@num_non_slack_vars...@num_vars).to_a
@@ -111,18 +104,21 @@ class Simplex
     pivot_ratio = Rational(1, @a[pivot_row][pivot_column])
 
     # update pivot row
-    @a[pivot_row] *= pivot_ratio
-    @b[pivot_row] = pivot_ratio * @b[pivot_row]
+    @a[pivot_row] = @a[pivot_row].map { |val| val * pivot_ratio }
+    @b[pivot_row] = @b[pivot_row] * pivot_ratio
 
     # update objective
-    @c -= @c[pivot_column] * @a[pivot_row]
+    # @c -= @c[pivot_column] * @a[pivot_row]
+    @c = @c.map.with_index { |val, i|
+      val - @c[pivot_column] * @a[pivot_row][i]
+    }
 
     # update A and B
     @num_constraints.times { |i|
       next if i == pivot_row
       r = @a[i][pivot_column]
-      @a[i] -= r * @a[pivot_row]
-      @b[i] -= r * @b[pivot_row]
+      @a[i] = @a[i].map.with_index { |val, j| val - r * @a[pivot_row][j] }
+      @b[i] = @b[i] - r * @b[pivot_row]
     }
 
     self.update_solution

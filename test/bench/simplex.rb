@@ -4,7 +4,7 @@ require 'benchmark/ips'
 Benchmark.ips do |b|
   b.config time: 3, warmup: 0.5
 
-  b.report("Simplex Vector") {
+  b.report("Simplex Array") {
     Simplex.new([1, 1],
                 [[2,  1],
                  [1,  2]],
