@@ -8,7 +8,7 @@ describe Simplex::Parse do
     it "must parse valid terms" do
       { "-1.2A" => [-1.2, :A],
         "99x"   => [99.0, :x],
-        "z"     => [1.0,  :z],
+        "z"     => [ 1.0, :z],
         "-b"    => [-1.0, :b] }.each { |valid, expected|
         P.term(valid).must_equal expected
       }
@@ -23,12 +23,12 @@ describe Simplex::Parse do
 
   describe "Parse.expression" do
     it "must parse valid expressions" do
-      { "x + y"             => [[1.0, 1.0],          [:x, :y]],
-        "2x - 5y"           => [[2.0, -5.0],         [:x, :y]],
-        "-2x - 3y + -42.7z" => [[-2.0, -3.0, -42.7], [:x, :y, :z]],
-        " -5y + -x  "       => [[-5.0, -1.0],        [:y, :x]],
-        "a - -b"            => [[1.0, 1.0],          [:a, :b]],
-        "a A b"             => [[1.0, 1.0, 1.0],     [:a, :A, :b]],
+      { "x + y"             => { x:  1.0, y:  1.0 },
+        "2x - 5y"           => { x:  2.0, y: -5.0 },
+        "-2x - 3y + -42.7z" => { x: -2.0, y: -3.0, z: -42.7 },
+        " -5y + -x  "       => { y: -5.0, x: -1.0 },
+        "a - -b"            => { a:  1.0, b:  1.0 },
+        "a A b"             => { a:  1.0, :A => 1.0, b: 1.0 },
       }.each { |valid, expected|
         P.expression(valid).must_equal expected
       }
@@ -55,9 +55,9 @@ describe Simplex::Parse do
 
   describe "Parse.inequality" do
     it "must parse valid inequalities" do
-      { "x + y <= 4"              => [[1.0, 1.0],    [:x, :y], 4.0],
-        "0.94a - 22.1b <= -14.67" => [[0.94, -22.1], [:a, :b], -14.67],
-        "x <= 0"                  => [[1.0],         [:x],     0],
+      { "x + y <= 4"              => [{ x: 1.0, y: 1.0 }, 4.0],
+        "0.94a - 22.1b <= -14.67" => [{ a: 0.94, b: -22.1 }, -14.67],
+        "x <= 0"                  => [{ x: 1.0 }, 0],
       }.each { |valid, expected|
         P.inequality(valid).must_equal expected
       }
@@ -71,5 +71,22 @@ describe Simplex::Parse do
         proc { P.inequality(invalid) }.must_raise P::Error
       }
     end
+  end
+end
+
+describe "Simplex.maximize" do
+  it "must problem stuff" do
+    prob = Simplex.problem(maximize: 'x + y',
+                           constraints: ['2x + y <= 4',
+                                         'x + 2y <= 3'])
+    sol = prob.solution
+    sol.must_equal [Rational(5, 3), Rational(2, 3)]
+  end
+
+  it "must maximize stuff" do
+    Simplex.maximize('x + y',
+                     '2x + y <= 4',
+                     'x + 2y <= 3').must_equal [Rational(5, 3),
+                                                Rational(2, 3)]
   end
 end

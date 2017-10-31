@@ -25,12 +25,14 @@ class Simplex
 
     def self.inequality(str)
       lhs, rhs = str.split('<=')
-      lhco, lhvar = self.expression(lhs)
+      if lhs.nil? or lhs.empty? or rhs.nil? or rhs.empty?
+        raise(InvalidInequality, "#{str}")
+      end
       rht = self.tokenize(rhs)
       raise(InvalidInequality, "#{str}; bad rhs: #{rhs}") unless rht.size == 1
       c = rht.first
       raise(InvalidInequality, "bad rhs: #{rhs}") if !c.match CONSTANT_RGX
-      return lhco, lhvar, c.to_f
+      return self.expression(lhs), c.to_f
     end
 
     # ignore leading and trailing spaces
@@ -50,8 +52,7 @@ class Simplex
     def self.expression(str)
       terms = self.tokenize(str)
       negative = false
-      coefficients = []
-      variables = []
+      coefficients = {}
       while !terms.empty?
         # consume plus and minus operations
         term = terms.shift
@@ -64,11 +65,10 @@ class Simplex
         end
 
         coefficient, variable = self.term(term)
-        coefficient *= -1 if negative
-        coefficients << coefficient
-        variables << variable
+        raise("double variable: #{str}") if coefficients.key?(variable)
+        coefficients[variable] = negative ? coefficient * -1 : coefficient
       end
-      return coefficients, variables
+      coefficients
     end
 
     def self.term(str)
@@ -78,5 +78,46 @@ class Simplex
       sym = matches[3].to_sym # consider matches[3].downcase.to_sym
       return flt, sym
     end
+  end
+
+  def self.problem(maximize: nil, constraints: [], **kwargs)
+    if maximize
+      obj, maximize = maximize, true
+    elsif kwargs[:minimize]
+      obj, maximize = kwargs[:minimize], false
+    else
+      raise(ArgumentError, "one of maximize/minimize expected")
+    end
+    unless obj.is_a?(String)
+      raise(ArgumentError, "bad expr: #{expr} (#{expr.class})")
+    end
+    obj_cof = Parse.expression(obj)
+
+    c = [] # coefficients of objective expression
+    a = [] # array (per constraint) of the inequality's lhs coefficients
+    b = [] # rhs (constant) for the inequalities / constraints
+
+    # this determines the order of coefficients
+    letter_vars = obj_cof.keys
+    letter_vars.each { |v| c << obj_cof[v] }
+
+    constraints.each { |str|
+      unless str.is_a?(String)
+        raise(ArgumentError, "bad constraint: #{str} (#{str.class})")
+      end
+      cofs = []
+      ineq_cofs, rhs = Parse.inequality(str)
+      letter_vars.each { |v|
+        raise("constraint #{str} is missing var #{v}") unless ineq_cofs.key?(v)
+        cofs << ineq_cofs[v]
+      }
+      a.push cofs
+      b.push rhs
+    }
+    self.new(c, a, b)
+  end
+
+  def self.maximize(expression, *ineqs)
+    self.problem(maximize: expression, constraints: ineqs).solution
   end
 end
